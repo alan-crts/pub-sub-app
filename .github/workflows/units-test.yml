@@ -1,0 +1,42 @@
+name: Tests Unitaires
+
+on:
+  pull_request:
+    branches: [ "main", "develop" ]
+    paths:
+      - 'RabbitMqProductAPI/**'
+      - 'RabbitMqProductAPI.Tests/**'
+  workflow_dispatch:
+
+env:
+  PROJECT_FOLDER: "RabbitMqProductAPI"
+  TEST_PROJECT_FOLDER: "RabbitMqProductAPI.Tests"
+  DOTNET_VERSION: "9.x"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Configuration de .NET Core
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      
+      - name: Restauration des dépendances
+        run: dotnet restore
+      
+      - name: Construction du projet
+        run: dotnet build --configuration Release --no-restore
+      
+      - name: Exécution des tests
+        run: dotnet test ${{ env.TEST_PROJECT_FOLDER }} --configuration Release --no-build --verbosity normal
+      
+      - name: Publication des résultats de test
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ${{ env.TEST_PROJECT_FOLDER }}/TestResults

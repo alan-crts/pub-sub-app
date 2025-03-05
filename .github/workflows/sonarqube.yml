@@ -1,0 +1,41 @@
+name: SonarQube Analysis
+
+env:
+  PROJECT_FOLDER: "RabbitMqProductAPI"
+  PROJECT_NAME: "RabbitMqProductAPI"
+  DOTNET_VERSION: "9.x"
+
+on:
+  pull_request:
+    branches: [ "main", "develop" ]
+  workflow_dispatch:
+
+jobs:
+  sonar:
+    runs-on: ubuntu-latest
+    environment:
+      name: "Azure"
+
+    steps:      
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{env.DOTNET_VERSION}}
+
+      - name: Install SonarScanner
+        run: |
+          dotnet tool install --global dotnet-sonarscanner
+
+      - name: Build and analyze
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          dotnet sonarscanner begin /k:"${{ secrets.SONAR_PROJECT_KEY }}" /o:"${{ secrets.SONAR_ORGANIZATION }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
+          dotnet build ${{env.PROJECT_FOLDER}}/${{env.PROJECT_NAME}}.csproj --configuration Release
+          dotnet test ${{env.PROJECT_FOLDER}}.Tests/${{env.PROJECT_FOLDER}}.Tests.csproj --no-build --configuration Release /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+          dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
