@@ -12,12 +12,11 @@
 #   - AZURE_SUBSCRIPTION_ID => l'ID se récupère dans l'overview de l'Abonnement
 # 4. Tester la Github Actions
 
-
 name: Deploy API to AKS
 
 on:
   push:
-    branches: ["maalsi24"]
+    branches: ["main"]
   workflow_dispatch:
 
 env:
